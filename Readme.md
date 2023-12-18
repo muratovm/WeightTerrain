@@ -1,3 +1,3 @@
 
 ## Vizualised Weights
-![Alt text](image.png)
+![Alt text](neural_net.png)
