@@ -36,7 +36,7 @@ def run_glfw_window(network):
 if __name__ == "__main__":
     # Run in a separate thread
     network = Network([15, 5,20,15,15,5,10])  # Example: 3 layers with 3, 4, and 2 neurons respectively
-    thread = Thread(target=run_glfw_window)
+    thread = Thread(target=run_glfw_window, args=(network,))
     thread.start()
 
 
