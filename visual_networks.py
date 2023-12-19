@@ -8,12 +8,11 @@ import seaborn as sns
 from colors import *
 
 class Neuron:
-    def __init__(self, x, y, radius=0.05):
+    def __init__(self, x, y, value, radius=0.05):
         self.x = x
         self.y = y
         self.radius = radius
-        self.value = random.random()
-        #self.color = random_color()  # Random red component
+        self.value = value
         self.color = (1,1,1,0.5)
 
     def draw(self):
@@ -27,7 +26,7 @@ class Neuron:
         glEnd()
 
 class Layer:
-    def __init__(self, neuron_count, layer_index, total_layers, radius=0.05):
+    def __init__(self, type, neuron_count, layer_index, total_layers, biases, radius=0.05):
         self.neurons = []
         self.layer_index = layer_index
         self.total_layers = total_layers
@@ -40,7 +39,15 @@ class Layer:
         for i in range(neuron_count):
             # Vertical position centered around the vertical_center
             y = vertical_center + (vertical_gap * i) - half_height
-            self.neurons.append(Neuron(self.get_layer_x_position(), y, radius))
+
+            if type == "hidden":
+                self.neurons.append(Neuron(self.get_layer_x_position(), y, biases[i], radius))
+            elif type == "input":
+                self.neurons.append(Neuron(self.get_layer_x_position(), y, 0, radius))
+            elif type == "output":
+                self.neurons.append(Neuron(self.get_layer_x_position(), y, biases[i], radius))
+            else:
+                print("Invalid Layer Type")
 
 
     def get_layer_x_position(self):
@@ -54,12 +61,12 @@ class Layer:
 
 class Connection:
 
-    def __init__(self, start_neuron, end_neuron, width=0.5):
+    def __init__(self, start_neuron, end_neuron, value, width=0.5):
         self.start_neuron = start_neuron
         self.end_neuron = end_neuron
         self.width = 0.1
 
-        self.color = random_color()  # Random red component
+        self.color = color(value)  # Random red component
 
     def draw(self):
         # Set line width
@@ -78,7 +85,11 @@ class Connection:
         glEnd()
 
 class Network:
-    def __init__(self, layer_structure):
+    def __init__(self, network_weights, network_biases):
+
+        layer_structure = [len(layer) for layer in network_biases]
+        layer_structure = [len(network_weights[0][0])] + layer_structure
+
         self.layers = []
         self.connections = []  # List to store connections
 
@@ -87,13 +98,18 @@ class Network:
         limiting_factor = max(total_layers, max(layer_structure))
 
         for i, neuron_count in enumerate(layer_structure):
-            self.layers.append(Layer(neuron_count, i, total_layers, 0.8/limiting_factor))
+            if i == 0:
+                self.layers.append(Layer("input", neuron_count, i, total_layers, [], 0.8/limiting_factor))
+            else:
+                self.layers.append(Layer("hidden", neuron_count, i, total_layers, network_biases[i-1], 0.8/limiting_factor))
 
         # Create connections between layers
         for i in range(len(self.layers) - 1):
-            for neuron in self.layers[i].neurons:
-                for next_neuron in self.layers[i + 1].neurons:
-                    self.connections.append(Connection(neuron, next_neuron))
+            for j in range(len(self.layers[i].neurons)):
+                neuron = self.layers[i].neurons[j]
+                for k in range(len(self.layers[i + 1].neurons)):
+                    next_neuron = self.layers[i + 1].neurons[k]
+                    self.connections.append(Connection(neuron, next_neuron,network_weights[i][k][j], 1))
 
     def draw(self):
         # Draw connections first
