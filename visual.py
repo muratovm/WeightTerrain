@@ -7,6 +7,30 @@ import numpy as np
 from opengl import *
 from visual_networks import *
 
+# Global variables to track mouse state and position
+is_dragging = False
+last_pos = (0, 0)
+
+def mouse_button_callback(window, button, action, mods):
+    global is_dragging, last_pos
+    if button == glfw.MOUSE_BUTTON_LEFT:
+        if action == glfw.PRESS:
+            is_dragging = True
+            last_pos = glfw.get_cursor_pos(window)
+        elif action == glfw.RELEASE:
+            is_dragging = False
+
+def cursor_position_callback(window, xpos, ypos):
+    global is_dragging, last_pos
+    if is_dragging:
+        # Calculate the difference in position
+        dx = xpos - last_pos[0]
+        dy = ypos - last_pos[1]
+        last_pos = (xpos, ypos)
+
+        # Apply the translation to the view
+        glTranslatef(dx * 0.0025, -dy * 0.0025, 0)  # Adjust the factor to control the speed of panning
+
 def run_glfw_window(network):
     if not glfw.init():
         return
@@ -16,8 +40,12 @@ def run_glfw_window(network):
     if not window:
         glfw.terminate()
         return
+    
 
     glfw.make_context_current(window)
+    # Set the callback functions
+    glfw.set_mouse_button_callback(window, mouse_button_callback)
+    glfw.set_cursor_pos_callback(window, cursor_position_callback)
 
     while not glfw.window_should_close(window):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
