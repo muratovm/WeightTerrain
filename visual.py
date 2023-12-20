@@ -10,6 +10,24 @@ from visual_networks import *
 # Global variables to track mouse state and position
 is_dragging = False
 last_pos = (0, 0)
+scale_factor = 1.0
+
+window_width = 0
+window_height = 0
+
+def scroll_callback(window, xoffset, yoffset):
+    global scale_factor
+    # Adjust the scale factor based on the scroll direction
+    if yoffset > 0:
+        scale_factor *= 1.1  # Zoom in (increase scale)
+    elif yoffset < 0:
+        scale_factor *= 0.9  # Zoom out (decrease scale)
+
+    # Update the projection or modelview matrix with the new scale
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    glScalef(scale_factor, scale_factor, scale_factor)
+    print(last_pos)
 
 def mouse_button_callback(window, button, action, mods):
     global is_dragging, last_pos
@@ -29,9 +47,10 @@ def cursor_position_callback(window, xpos, ypos):
         last_pos = (xpos, ypos)
 
         # Apply the translation to the view
-        glTranslatef(dx * 0.0025, -dy * 0.0025, 0)  # Adjust the factor to control the speed of panning
+        glTranslatef(dx * 0.0025 * scale_factor, -dy * 0.0025 * scale_factor, 0)  # Adjust the factor to control the speed of panning
 
 def run_glfw_window(network):
+    global window_width, window_height
     if not glfw.init():
         return
     window_width = 800
@@ -46,6 +65,8 @@ def run_glfw_window(network):
     # Set the callback functions
     glfw.set_mouse_button_callback(window, mouse_button_callback)
     glfw.set_cursor_pos_callback(window, cursor_position_callback)
+    # Set the callback function
+    glfw.set_scroll_callback(window, scroll_callback)
 
     while not glfw.window_should_close(window):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
