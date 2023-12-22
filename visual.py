@@ -11,7 +11,7 @@ from visual_networks import *
 is_dragging = False
 last_pos = (0, 0)
 scale_factor = 1.0
-
+translation_offset = [0, 0]
 window_width = 0
 window_height = 0
 
@@ -26,7 +26,8 @@ def scroll_callback(window, xoffset, yoffset):
     # Update the projection or modelview matrix with the new scale
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    glScalef(scale_factor, scale_factor, scale_factor)
+    glScalef(scale_factor, scale_factor, scale_factor)# Apply translation
+    glTranslatef(translation_offset[0], translation_offset[1], 0)
     print(last_pos)
 
 def mouse_button_callback(window, button, action, mods):
@@ -46,8 +47,11 @@ def cursor_position_callback(window, xpos, ypos):
         dy = ypos - last_pos[1]
         last_pos = (xpos, ypos)
 
+        translation_offset[0] += dx * 0.0025  # Adjust the scaling factor as needed
+        translation_offset[1] -= dy * 0.0025
+
         # Apply the translation to the view
-        glTranslatef(dx * 0.0025 * scale_factor, -dy * 0.0025 * scale_factor, 0)  # Adjust the factor to control the speed of panning
+        glTranslatef(dx * 0.0025, -dy * 0.0025, 0)  # Adjust the factor to control the speed of panning
 
 def run_glfw_window(network):
     global window_width, window_height
@@ -70,7 +74,7 @@ def run_glfw_window(network):
 
     while not glfw.window_should_close(window):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
+
         # Draw network here
         draw_symmetry_line()
         network.draw()
