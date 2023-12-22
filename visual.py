@@ -47,11 +47,11 @@ def cursor_position_callback(window, xpos, ypos):
         dy = ypos - last_pos[1]
         last_pos = (xpos, ypos)
 
-        translation_offset[0] += dx * 0.0025  # Adjust the scaling factor as needed
-        translation_offset[1] -= dy * 0.0025
+        translation_offset[0] += dx * (0.0025/scale_factor)  # Adjust the scaling factor as needed
+        translation_offset[1] -= dy * (0.0025/scale_factor)
 
         # Apply the translation to the view
-        glTranslatef(dx * 0.0025, -dy * 0.0025, 0)  # Adjust the factor to control the speed of panning
+        glTranslatef(dx * (0.0025/scale_factor), -dy * (0.0025/scale_factor), 0)  # Adjust the factor to control the speed of panning
 
 def run_glfw_window(network):
     global window_width, window_height
