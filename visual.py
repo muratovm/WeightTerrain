@@ -77,6 +77,10 @@ def run_glfw_window(network):
 
         # Draw network here
         draw_symmetry_line()
+        inputs = torch.randn(1, 10)  # 10 samples, each with 10 features
+        targets = inputs[:, 4] + inputs[:, 0] + inputs[:, 9]
+
+        network.train(inputs, targets)
         network.draw()
 
         glfw.swap_buffers(window)

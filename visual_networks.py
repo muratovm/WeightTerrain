@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from colors import *
+from sample_networks import *
 
 class Neuron:
     def __init__(self, x, y, value, radius=0.05):
@@ -49,7 +50,6 @@ class Layer:
             else:
                 print("Invalid Layer Type")
 
-
     def get_layer_x_position(self):
         # Horizontal position based on layer index
         layer_gap = 2.0 / (self.total_layers + 1)
@@ -85,31 +85,63 @@ class Connection:
         glEnd()
 
 class Network:
-    def __init__(self, network_weights, network_biases):
+    def __init__(self, model):
 
-        layer_structure = [len(layer) for layer in network_biases]
-        layer_structure = [len(network_weights[0][0])] + layer_structure
+        self.model = model
+        self.network_weights, self.network_biases = self.weights_and_biases(model)
 
-        self.layers = []
-        self.connections = []  # List to store connections
+        layer_structure = [len(layer) for layer in self.network_biases]
+        self.layer_structure = [len(self.network_weights[0][0])] + layer_structure
 
         # Create layers
-        total_layers = len(layer_structure)
-        limiting_factor = max(total_layers, max(layer_structure))
+        self.total_layers = len(layer_structure)
+        self.limiting_factor = max(self.total_layers, max(self.layer_structure))
 
-        for i, neuron_count in enumerate(layer_structure):
+        self.layers = self.update_layers()
+        self.connections = self.update_connections()
+
+    def update_layers(self):
+        layers = [] # List to store layers
+        for i, neuron_count in enumerate(self.layer_structure):
             if i == 0:
-                self.layers.append(Layer("input", neuron_count, i, total_layers, [], 0.8/limiting_factor))
+                layers.append(Layer("input", neuron_count, i, self.total_layers, [], 0.8/self.limiting_factor))
             else:
-                self.layers.append(Layer("hidden", neuron_count, i, total_layers, network_biases[i-1], 0.8/limiting_factor))
+                layers.append(Layer("hidden", neuron_count, i, self.total_layers, self.network_biases[i-1], 0.8/self.limiting_factor))
+        return layers
 
+    def update_connections(self):
+        connections = []  # List to store connections
         # Create connections between layers
         for i in range(len(self.layers) - 1):
             for j in range(len(self.layers[i].neurons)):
                 neuron = self.layers[i].neurons[j]
                 for k in range(len(self.layers[i + 1].neurons)):
                     next_neuron = self.layers[i + 1].neurons[k]
-                    self.connections.append(Connection(neuron, next_neuron,network_weights[i][k][j], 1))
+                    connections.append(Connection(neuron, next_neuron,self.network_weights[i][k][j], 1))
+
+                    if i==0 and j==0 and k ==0:
+                        print(self.network_weights[i][k][j])
+                        
+
+        return connections
+    
+    def weights_and_biases(self, model):
+        params = extract_params(model)
+        iterator = iter(params.items())
+        weights = []
+        biases = []
+        for first_item, second_item in zip(iterator, iterator):
+            # Process the items here
+            weights.append(first_item[1])
+            biases.append(second_item[1])
+        return weights, biases
+
+    
+    def train(self, inputs, targets):
+        self.model.train(inputs, targets)
+        self.network_weights, self.network_biases = self.weights_and_biases(self.model)
+        self.layers = self.update_layers()
+        self.connections = self.update_connections()
 
     def draw(self):
         # Draw connections first
@@ -119,14 +151,6 @@ class Network:
         # Then draw layers
         for layer in self.layers:
             layer.draw()
-
-
-# Function to extract model parameters
-def extract_params(model):
-    params_dict = {}
-    for name, param in model.named_parameters():
-        params_dict[name] = param.data.cpu().numpy()
-    return params_dict
 
 def extract_model_params(model):
     layers = []
@@ -146,6 +170,13 @@ def visualize_params(params_dict):
             plt.hist(param, bins=20)
             plt.title(f"{name} Histogram")
         plt.show()
+
+# Function to extract model parameters
+def extract_params(model):
+    params_dict = {}
+    for name, param in model.named_parameters():
+        params_dict[name] = param.data.cpu().numpy()
+    return params_dict
 
 # Function to visualize the whole model
 def visualize_model(model):
