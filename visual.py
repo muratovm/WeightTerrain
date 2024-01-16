@@ -76,7 +76,7 @@ def run_glfw_window(network):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         # Draw network here
-        draw_symmetry_line()
+        #draw_symmetry_line()
         inputs = torch.randn(1, 10)  # 10 samples, each with 10 features
         targets = inputs[:, 4] + inputs[:, 0] + inputs[:, 9]
 

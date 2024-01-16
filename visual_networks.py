@@ -7,6 +7,7 @@ import seaborn as sns
 
 from colors import *
 from sample_networks import *
+from IPython.display import display, clear_output
 
 class Neuron:
     def __init__(self, x, y, value, radius=0.05):
@@ -22,7 +23,7 @@ class Neuron:
         glColor4f(*self.color)  # White color
         glBegin(GL_TRIANGLE_FAN)
         glVertex2f(self.x, self.y)
-        for angle in np.linspace(0, 2 * np.pi, 15):
+        for angle in np.linspace(0, 2 * np.pi, 30):
             glVertex2f(self.x + self.radius * np.cos(angle), self.y + self.radius * np.sin(angle))
         glEnd()
 
@@ -99,6 +100,9 @@ class Network:
 
         self.layers = self.update_layers()
         self.connections = self.update_connections()
+        self.losses =[]
+        plt.ion()  # Turn on interactive mode
+        self.fig, self.ax = plt.subplots()
 
     def update_layers(self):
         layers = [] # List to store layers
@@ -138,7 +142,21 @@ class Network:
 
     
     def train(self, inputs, targets):
-        self.model.train(inputs, targets)
+        final_loss = self.model.train(inputs, targets)
+        self.losses.append(final_loss)
+
+        """
+        # Plotting the loss
+        # Update the plot
+        self.ax.clear()
+        self.ax.plot(self.losses)  # Update with new data
+        self.ax.set_xlabel('Epoch')
+        self.ax.set_ylabel('Loss')
+
+        display(self.fig)    # Display the figure
+        #clear_output(wait=True)  # Clear the output for the next update
+        """
+
         self.network_weights, self.network_biases = self.weights_and_biases(self.model)
         self.layers = self.update_layers()
         self.connections = self.update_connections()
@@ -151,6 +169,7 @@ class Network:
         # Then draw layers
         for layer in self.layers:
             layer.draw()
+        #glClearColor(1.0, 1.0, 0.9, 1.0)  # Red, Green, Blue, Alpha
 
 def extract_model_params(model):
     layers = []
@@ -180,5 +199,6 @@ def extract_params(model):
 
 # Function to visualize the whole model
 def visualize_model(model):
+    # Set the background color to white
     params_dict = extract_params(model)
     visualize_params(params_dict)
